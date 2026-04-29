@@ -8,11 +8,9 @@
   - 本地运行同样兼容
 
 v2 优化：
-  - 页面更紧凑，减少冗余间距
-  - 图标全面升级（精致 Unicode）
-  - 菜谱卡片重新设计
-  - 食材标签渐变色美化
-  - 手机端体验进一步优化
+  - 页面更紧凑
+  - 图标升级
+  - 菜谱卡片重设计
 
 作者：龙虾宝宝的私房厨房
 """
@@ -23,7 +21,7 @@ import streamlit as st
 
 # ============================================================================
 # 配置区
-# ============================================================================
+#============================================================================
 
 if os.path.isdir("/mount/src"):
     DATA_DIR = "/mount/src"
@@ -43,29 +41,20 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ---- 全局样式注入：让整体更紧凑 ----
+# ---- 全局样式注入 ----
 COMPACT_STYLE = """
 <style>
 /* 全局间距压缩 */
-.stApp { padding-top: 0.6rem !important; }
-.stTitle { font-size: 1.4rem !important; margin-bottom: 0.3rem !important; }
-.stSubheader { font-size: 0.95rem !important; margin-bottom: 0.2rem !important; }
-
-/* 侧边栏精简 */
-[data-testid="stSidebar"] {
+section[data-testid="stSidebar"] {
     min-width: 260px !important;
     max-width: 280px !important;
 }
-
-/* Metric 卡片紧凑 */
 [data-testid="stMetric"] {
     background: #f8f9fa;
     border-radius: 10px;
     padding: 0.35rem 0.7rem !important;
     border-left: 3px solid #e67e22;
 }
-
-/* 搜索框美化 */
 [data-testid="stTextInput"] > div > div > input {
     border-radius: 12px !important;
     border: 2px solid #ddd !important;
@@ -75,21 +64,17 @@ COMPACT_STYLE = """
     border-color: #e67e22 !important;
     box-shadow: 0 0 0 2px rgba(230,126,34,0.15) !important;
 }
-
-/* 按钮圆角 */
 button[kind="primary"] { border-radius: 10px !important; }
 button[kind="secondary"] { border-radius: 10px !important; }
-
-/* 分割线减淡 */
 hr { margin: 0.5rem 0 !important; opacity: 0.4; }
 </style>
 """
 st.markdown(COMPACT_STYLE, unsafe_allow_html=True)
 
 
-# ============================================================================
+#============================================================================
 # 数据持久化
-# ============================================================================
+#============================================================================
 
 def load_recipes():
     if os.path.exists(DATA_FILE):
@@ -118,9 +103,9 @@ def save_recipes(recipes):
             json.dump(recipes, f, ensure_ascii=False, indent=2)
 
 
-# ============================================================================
+#============================================================================
 # 示例数据
-# ============================================================================
+#============================================================================
 
 def _get_sample_recipes():
     return [
@@ -184,9 +169,9 @@ def _get_sample_recipes():
     ]
 
 
-# ============================================================================
+#============================================================================
 # 核心搜索逻辑
-# ============================================================================
+#============================================================================
 
 def search_recipes(recipes, query):
     if not query or not query.strip():
@@ -203,29 +188,28 @@ def search_recipes(recipes, query):
     return matched
 
 
-# ============================================================================
-# 颜色工具：为每个菜名生成稳定的渐变色
-# ============================================================================
+#============================================================================
+# 颜色工具
+#============================================================================
 
 def _recipe_color(name):
-    """根据菜名哈希返回一组稳定颜色。"""
     colors = [
-        ("#ff6b6b", "#ee5a24"),   /* 红-橙 */
-        ("#f9ca24", "#f0932b"),   /* 黄-橙 */
-        ("#6c5ce7", "#a29bfe"),   /* 紫-浅紫 */
-        ("#00b894", "#55efc4"),   /* 绿-薄荷 */
-        ("#0984e3", "#74b9ff"),   /* 蓝-天蓝 */
-        ("#d63031", "#ff7675"),   /* 红-粉红 */
-        ("#e17055", "#fab1a0"),   /* 橙-桃色 */
-        ("#00cec9", "#81ecec"),   /* 青-淡青 */
+        ("#ff6b6b", "#ee5a24"),
+        ("#f9ca24", "#f0932b"),
+        ("#6c5ce7", "#a29bfe"),
+        ("#00b894", "#55efc4"),
+        ("#0984e3", "#74b9ff"),
+        ("#d63031", "#ff7675"),
+        ("#e17055", "#fab1a0"),
+        ("#00cec9", "#81ecec"),
     ]
-    idx = hash(name) % len(colors)
+    idx = abs(hash(name)) % len(colors)
     return colors[idx]
 
 
-# ============================================================================
-# UI 组件：添加 / 编辑表单
-# ============================================================================
+#============================================================================
+# UI：添加/编辑表单
+#============================================================================
 
 def show_recipe_form(edit_index=None):
     recipes = st.session_state.get("recipes", [])
@@ -235,38 +219,38 @@ def show_recipe_form(edit_index=None):
         default_name = existing["name"]
         default_ings = ", ".join(existing["ingredients"])
         default_steps = existing["steps"]
-        form_title = f"编辑：{existing['name']}"
-        submit_label = "[保存修改]"
+        form_title = "编辑：" + existing["name"]
+        submit_label = "保存修改"
     else:
         default_name = ""
         default_ings = ""
         default_steps = ""
         form_title = "+ 添加新菜谱"
-        submit_label = "+ 添加菜谱"
+        submit_label = "添加菜谱"
 
     with st.form(key="recipe_form", clear_on_submit=True):
-        st.markdown(f"##### {form_title}")
+        st.markdown("**" + form_title + "**")
 
         name = st.text_input(
-            label="菜名 *",
+            label="菜名",
             value=default_name,
             placeholder="例：番茄炒蛋",
             label_visibility="collapsed",
         )
 
         ingredients = st.text_area(
-            label="食材列表（逗号分隔）*",
+            label="食材",
             value=default_ings,
             height=80,
-            placeholder="番茄, 鸡蛋, 葱花, 盐, 糖",
+            placeholder="番茄, 鸡蛋, 葱花",
             label_visibility="collapsed",
         )
 
         steps = st.text_area(
-            label="制作步骤 *",
+            label="步骤",
             value=default_steps,
             height=140,
-            placeholder="1. 第一步...\n2. 第二步...",
+            placeholder="1. 第一步...",
             label_visibility="collapsed",
         )
 
@@ -298,103 +282,100 @@ def show_recipe_form(edit_index=None):
             if edit_index is not None:
                 st.session_state.recipes[edit_index] = new_recipe
                 save_recipes(st.session_state.recipes)
-                st.success(f'已更新「{new_recipe["name"]}」')
+                st.success("已更新：" + new_recipe["name"])
                 st.session_state.pop("editing_index", None)
             else:
                 st.session_state.recipes.append(new_recipe)
                 save_recipes(st.session_state.recipes)
-                st.success(f'已添加「{new_recipe["name"]}」')
+                st.success("已添加：" + new_recipe["name"])
 
             st.rerun()
 
 
-# ============================================================================
-# UI 组件：菜谱卡片（重新设计）
-# ============================================================================
+#============================================================================
+# UI：菜谱卡片
+#============================================================================
 
 def recipe_card(recipe, index):
     c1, c2 = _recipe_color(recipe["name"])
 
-    # 卡片头部：菜名 + 操作按钮
+    # 卡片头部：菜名 + 按钮
     col_left, col_right = st.columns([5, 1])
     with col_left:
         st.markdown(
-            f"<span style='font-size:1.08rem;font-weight:600;"
-            f"color:#222;border-left:4px solid {c1};padding-left:8px;'>"
-            f"{recipe['name']}</span>",
+            "<span style='font-size:1.05rem;font-weight:600;"
+            "color:#222;border-left:4px solid " + c1 + ";padding-left:8px;'>"
+            + recipe["name"] + "</span>",
             unsafe_allow_html=True,
         )
     with col_right:
         btn_e, btn_d = st.columns(2)
         with btn_e:
-            if st.button("✎", key=f"edit_{index}",
-                         help="编辑", use_container_width=True):
+            if st.button("✎", key="edit_" + str(index), help="编辑", use_container_width=True):
                 st.session_state["editing_index"] = index
                 st.rerun()
         with btn_d:
-            if st.button("×", key=f"del_{index}",
-                         help="删除", type="secondary", use_container_width=True):
-                st.session_state[f"confirm_del_{index}"] = True
+            if st.button("×", key="del_" + str(index), help="删除", type="secondary", use_container_width=True):
+                st.session_state["confirm_del_" + str(index)] = True
 
-    # 食材标签行 —— 渐变胶囊式标签
-    tags_html = " ".join([
-        f'<span style="background:linear-gradient(135deg,{c1},{c2});'
-        f'color:white;padding:2px 11px;border-radius:12px;'
-        f'font-size:12px;display:inline-block;margin:2px;'
-        f'font-weight:500;">{ing}</span>'
-        for ing in recipe["ingredients"]
-    ])
-    st.markdown(f"<div style='margin:2px 0 4px 14px;'>{tags_html}</div>", unsafe_allow_html=True)
+    # 食材标签
+    tags_html = ""
+    for ing in recipe["ingredients"]:
+        tags_html += (
+            "<span style='background:linear-gradient(135deg," + c1 + "," + c2 + ");"
+            "color:white;padding:2px 11px;border-radius:12px;"
+            "font-size:12px;display:inline-block;margin:2px;"
+            "font-weight:500;'>" + ing + "</span> "
+        )
+    st.markdown("<div style='margin:2px 0 4px 14px;'>" + tags_html + "</div>", unsafe_allow_html=True)
 
-    # 制作步骤（可折叠）
-    with st.expander("查看步骤", expanded=False, icon="📋"):
+    # 制作步骤
+    with st.expander("查看步骤", expanded=False):
         st.markdown(
-            f"<div style='line-height:1.7;font-size:0.88rem;color:#444;padding-left:8px;'>"
-            f"{recipe['steps'].replace(chr(10), '<br>')}"
-            f"</div>",
+            "<div style='line-height:1.7;font-size:0.88rem;color:#444;padding-left:8px;'>"
+            + recipe["steps"].replace("\n", "<br>")
+            + "</div>",
             unsafe_allow_html=True,
         )
 
-    # 删除确认弹窗
-    if st.session_state.get(f"confirm_del_{index}"):
+    # 删除确认
+    if st.session_state.get("confirm_del_" + str(index)):
         st.markdown("---")
         cw, cy, cn = st.columns([5, 1.5, 1.5])
         with cw:
-            st.warning(f'确定删除「{recipe["name"]}」？')
+            st.warning("确定删除「" + recipe["name"] + "」？")
         with cy:
-            if st.button("确认", key=f"yes_{index}", type="primary", use_container_width=True):
+            if st.button("确认", key="yes_" + str(index), type="primary", use_container_width=True):
                 del st.session_state.recipes[index]
                 save_recipes(st.session_state.recipes)
-                st.success('已删除')
-                st.session_state.pop(f"confirm_del_{index}", None)
+                st.success("已删除")
+                st.session_state.pop("confirm_del_" + str(index), None)
                 st.rerun()
         with cn:
-            if st.button("取消", key=f"no_{index}", use_container_width=True):
-                st.session_state.pop(f"confirm_del_{index}", None)
+            if st.button("取消", key="no_" + str(index), use_container_width=True):
+                st.session_state.pop("confirm_del_" + str(index), None)
                 st.rerun()
 
     st.markdown("<hr style='opacity:0.25;margin:8px 0;'>", unsafe_allow_html=True)
 
 
-# ============================================================================
-# 主程序入口
-# ============================================================================
+#============================================================================
+# 主程序
+#============================================================================
 
 def main():
     if "recipes" not in st.session_state:
         st.session_state.recipes = load_recipes()
 
-    # ================================================================
     # 侧边栏
-    # ================================================================
     with st.sidebar:
-        # Logo 区域
-        st.markdown("""
-        <div style='text-align:center;padding:0.5rem 0;'>
-            <span style='font-size:2rem;'>♨</span>
-            <div style='font-size:1.05rem;font-weight:700;color:#e67e22;'>私房菜谱</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align:center;padding:0.5rem 0;'>"
+            "<span style='font-size:2rem;'>♨</span><br>"
+            "<span style='font-size:1.05rem;font-weight:700;color:#e67e22;'>私房菜谱</span>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
 
         total = len(st.session_state.recipes)
         total_ings = len(set(
@@ -419,43 +400,39 @@ def main():
         st.markdown("<hr>", unsafe_allow_html=True)
         st.caption("数据自动保存云端")
 
-    # ================================================================
     # 主区域
-    # ================================================================
-    # 顶栏标题 + 搜索框一行搞定
     tcol, scol = st.columns([1, 2])
     with tcol:
         st.markdown("### 我的私房菜谱")
     with scol:
         search_query = st.text_input(
             label="search",
-            placeholder="搜索食材… (如: 鸡肉 土豆)",
+            placeholder="搜索食材… 如: 鸡肉 土豆",
             label_visibility="collapsed",
         )
 
     filtered = search_recipes(st.session_state.recipes, search_query)
 
-    # 结果统计（精简为一行小字）
     if search_query.strip():
-        st.caption(f'「{search_query.strip()}」→ 找到 **{len(filtered)}** 道匹配菜谱')
+        st.caption("「" + search_query.strip() + "」→ 找到 " + str(len(filtered)) + " 道匹配菜谱")
     else:
-        st.caption(f'共 **{total}} 道菜谱')
+        st.caption("共 " + str(total) + " 道菜谱")
 
     st.markdown("<hr style='opacity:0.25;'>", unsafe_allow_html=True)
 
-    # 菜谱列表
     if filtered:
         for idx, recipe in enumerate(filtered):
             real_index = st.session_state.recipes.index(recipe)
             recipe_card(recipe, real_index)
     else:
-        st.markdown("""
-        <div style='text-align:center; padding:30px 0; color:#bbb;'>
-            <span style='font-size:2.5rem;'>&#128270;</span><br>
-            <span style='font-size:1rem;'>没有找到匹配的菜谱</span><br>
-            <span style='font-size:0.85rem;'>试试换个关键词或添加新菜谱吧</span>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align:center;padding:30px 0;color:#bbb;'>"
+            "<span style='font-size:2.5rem;'>&#128270;</span><br>"
+            "<span style='font-size:1rem;'>没有找到匹配的菜谱</span><br>"
+            "<span style='font-size:0.85rem;'>试试换个关键词或添加新菜谱吧</span>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
 
 
 if __name__ == "__main__":
